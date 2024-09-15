@@ -3,9 +3,52 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+import io
+%matplotlib inline
 
 # %%
-df = pd.read_csv('data/loan_data_2007_2014.csv', index_col=0, low_memory=False)
+def combine_files(target_directory, output_file_name=None, file_ext=None):
+    # Get the list of files in the target_directory, sorted by part number
+    files = sorted(
+        [
+            os.path.join(target_directory, f)
+            for f in os.listdir(target_directory)
+            if os.path.isfile(os.path.join(target_directory, f))
+        ]
+    )
+
+    if not files:
+        print(f"No files found in target_directory {target_directory}")
+        return
+
+    combined_data = b""  # Store the combined data as bytes
+
+    # Combine all files into the combined_data variable
+    for file in files:
+        with open(file, "rb") as f:
+            combined_data += f.read()
+        print(f"Added {file}")
+
+    # If output_file_name is provided, save to file
+    if output_file_name:
+        output_file = f"{output_file_name}{file_ext}"
+        with open(output_file, "wb") as output:
+            output.write(combined_data)
+        print(f"Combined all files into {output_file}")
+
+    return combined_data
+
+
+loan_data_2007_2014 = combine_files(
+    "output_chunks", file_ext=".csv"
+)
+
+# %%
+csv_data = io.StringIO(loan_data_2007_2014.decode('utf-8'))
+
+# %%
+df = pd.read_csv(csv_data, index_col=0, low_memory=False)
 df.head()
 
 # %%
